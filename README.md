@@ -23,8 +23,16 @@ W folderze _home_ w pliku _json_ (_count.txt_) trzymana bieżąca liczba plików
 
 
 ## Struktura programu i działanie
-Tworzę obiekt opakowujący (DTO), który opakuje mi obiekt "plik"
-Dodam do DTO aktualną godzinę.
-Następnie inny moduł będzie odczytywał właściwość z DTO i na jego podstawie podejmuje kroki — np. ustawia inną właściwość na DTO.
+I wątek działający w nieskończonej pętli monitoruje folder wejściowy. Jeżeli znajdzie nowy plik 
+to tworzy obiekt **AttributesHolder** zawierający atrybutu każdego wykrytego plik.<br />
 
-Na koniec inny moduł na podstawie wpisu w tej ostatniej właściwości decyduje gdzie umieścić DTO.
+W obiekcie **AttributesHolder** ustawia atrybuty:<br />
+- nazwa pliku
+- ścieżka
+- czy plik jest "parzysty" - na podstawie daty jego utworzenia
+
+Wszystkie utworzone obiekty **AttributesHolder** dodaje do kolekcji (FIFO).<br />
+
+Następnie obiekty zdejmowane są z kolejki (wątek II aplikacji) i obsługiwane.<br />
+Obsługa to przeniesienie pliku zapisanego we właściwościach **AttributesHolder** do prawidłowego docelowego folderu.
+
