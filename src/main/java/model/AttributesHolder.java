@@ -14,35 +14,22 @@ import java.nio.file.attribute.FileTime;
 import static calendar.CalendarUtils.isDateIsEven;
 
 @Data
-public class FileWrapper {
+public class AttributesHolder {
 
     private String fileExt;
     private String fileName;
-
     private FileTime dateOfCreation;
-
+    private String sourceFolder;
+    private String destinationFolder;
     private boolean parityOfDate;
 
-    public FileWrapper(File file) throws FileOperationException {
-        Path path = Paths.get(file.getPath());
-        BasicFileAttributes fileAttr = FileUtils.getFileAttr(path);
 
-        FileTime creationTime;
-        if (fileAttr != null) {
-            creationTime = fileAttr.creationTime();
-        } else {
-            throw new FileOperationException(LanguageBundle.getResource("READING_FILE_ATTRIBUTES_NOT_POSSIBLE") + file.getName());
-        }
-        String fileName = file.getName();
-        String fileExt = getExtensionByGuava(file);
-        new FileWrapper(fileExt, fileName, creationTime);
-    }
-
-    public FileWrapper(String fileExt, String fileName, FileTime dateOfCreation) {
+    public AttributesHolder(String fileExt, String fileName, FileTime dateOfCreation, String sourceFolder, String destinationFolder) {
         this.fileExt = fileExt;
         this.fileName = fileName;
         this.dateOfCreation = dateOfCreation;
-
+        this.sourceFolder = sourceFolder;
+        this.destinationFolder = destinationFolder;
         setParityOfDate(isDateIsEven(dateOfCreation));
     }
 
