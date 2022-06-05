@@ -8,6 +8,8 @@ public class App {
 
     public static void main(String[] args) {
         logger.info("Application started.");
+        logger.debug("Application started.");
+        logger.error("Application started.");
 
         FolderMonitor fm = new FolderMonitor();
         try {
@@ -17,4 +19,5 @@ public class App {
         }
         fm.doFolderMonitoring();
     }
+
 }
