@@ -15,42 +15,27 @@ public class ConfigUtils {
     static Logger logger = LogManager.getRootLogger();
 
     public static String readConfigValue(String param) {
-        String value = null;
-        try {
-            value = ConfigUtils.getResource(param);
-        } catch (FileOperationException e) {
-            e.printStackTrace();
-            logger.error("{}", e);
-            try {
-                logger.info(LanguageBundle.getResource("ERROR_UNABLE_TO_LOAD_CONFIG_FILE"));
-            } catch (FileOperationException ex) {
-                ex.printStackTrace();
-                logger.error("{}", ex);
-            }
-        }
-        return value;
+        return ConfigUtils.getResource(param);
     }
 
-    public static String getResource(String message) throws FileOperationException {
-        String value = "";
+    public static String getResource(String message) {
+        String value;
+        Properties prop = new Properties();
 
         try (InputStream input = LanguageBundle.class.getClassLoader().getResourceAsStream("config.properties")) {
             if (input == null) {
                 return LanguageBundle.getResource("ERROR_UNABLE_TO_LOAD_CONFIG_FILE");
             }
 
-            Properties prop = new Properties();
             prop.load(input);
-
-            value = prop.getProperty(message);
-
         } catch (IOException ex) {
-            logger.error("{}", ex);
+            logger.error("Can't load config file");
             ex.printStackTrace();
         }
 
+        value = prop.getProperty(message);
+
         return value != null ? value : "";
     }
-
 
 }

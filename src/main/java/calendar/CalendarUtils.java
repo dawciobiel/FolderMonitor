@@ -23,7 +23,6 @@ public class CalendarUtils {
      */
     public static boolean isDateIsOdd(Calendar calendar) {
         int dayOfTheMonth = calendar.get(Calendar.DATE);
-
         return dayOfTheMonth % 2 != 0;
     }
 
