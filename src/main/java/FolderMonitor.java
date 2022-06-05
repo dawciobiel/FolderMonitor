@@ -10,7 +10,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.FileTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 
 @Data
@@ -35,7 +38,10 @@ public class FolderMonitor {
             Path directory = Path.of(home);
 
             // STEP3: Register the directory with the watch service
-            WatchKey watchKey = directory.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE);
+            WatchKey watchKey = directory.register(watchService,
+                    StandardWatchEventKinds.ENTRY_CREATE,
+                    StandardWatchEventKinds.ENTRY_MODIFY,
+                    StandardWatchEventKinds.ENTRY_DELETE);
 
             // STEP4: Poll for events
             while (true) {
@@ -74,11 +80,10 @@ public class FolderMonitor {
 
             }
         } catch (IOException | FileOperationException e) {
-            e.printStackTrace();
             logger.error("{}", e);
         }
 
-        // todo wait for proceedHolders finish
+        // todo wait for proceedHolders till finish
 
         System.exit(EXIT_STATUS_SUCCESS);
     }
@@ -97,8 +102,7 @@ public class FolderMonitor {
                 attributeCreationDate = null; // fileStore.getAttribute("creation-date"); // todo Get creation date from the file. It is possible to get absolute path from this file and check it in another way (system)
                 attributeCreationDate = FileTime.fromMillis(0); //todo
             } catch (IOException e) {
-                logger.info(LanguageBundle.getResource("ERROR_READING_FILE_ATTRIBUTES_NOT_POSSIBLE") + ": {}", fileStore);
-                e.printStackTrace();
+                logger.error(LanguageBundle.getResource("ERROR_READING_FILE_ATTRIBUTES_NOT_POSSIBLE") + ": {}", fileStore);
             }
 
             String attributeSourceFolder = ConfigUtils.readConfigValue("FOLDER_HOME");
@@ -132,32 +136,33 @@ public class FolderMonitor {
     }
 
 
-    public void createFolders() throws FileOperationException {
+    public void createFolders() {
         List<String> paths = Arrays.asList(
-                    ConfigUtils.readConfigValue("FOLDER_DEV"),
-                    ConfigUtils.readConfigValue("FOLDER_TEST"),
-                    ConfigUtils.readConfigValue("FOLDER_HOME")
-                );
+                ConfigUtils.readConfigValue("FOLDER_DEV"),
+                ConfigUtils.readConfigValue("FOLDER_TEST"),
+                ConfigUtils.readConfigValue("FOLDER_HOME")
+        );
 
         Consumer<String> consumer = p -> {
             File file = new File(p);
-            if (!file.mkdirs()) {
-                String errorMessage = "";
-                try {
-                    errorMessage = LanguageBundle.getResource("ERROR_CANT_CREATE_FOLDER");
-                } catch (FileOperationException e) {
-                    logger.error("Unable to read language file/attribute");
+            boolean isFolderCreated = file.mkdirs();
+            if (!isFolderCreated) {
+
+                boolean isFoldersAlreadyExist = file.exists();
+                if (!isFoldersAlreadyExist) {
+                    String errorMessage = LanguageBundle.getResource("ERROR_CANT_CREATE_FOLDER" + file.getName());
+                    logger.error(errorMessage);
+                    logger.error("Application terminated");
+                    System.exit(1);
+                } else {
+                    logger.debug("Folder {} exist", file.getName());
                 }
-                logger.error(errorMessage, p);
-                try {
-                    throw new FileOperationException(errorMessage);
-                } catch (FileOperationException e) {
-                    e.printStackTrace();
-                }
+            } else {
+                logger.debug("Folders created");
             }
         };
-
         paths.forEach(consumer);
-
     }
+
+
 }

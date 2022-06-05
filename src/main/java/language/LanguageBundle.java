@@ -1,7 +1,6 @@
 package language;
 
 import config.ConfigUtils;
-import files.FileOperationException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,7 +13,7 @@ public class LanguageBundle {
     static Logger logger = LogManager.getRootLogger();
 
 
-    public static String getResource(String message) throws FileOperationException {
+    public static String getResource(String message) {
         String value = "";
 
         String selectedLanguage = ConfigUtils.readConfigValue("LANGUAGE");
@@ -24,7 +23,7 @@ public class LanguageBundle {
 
         try (InputStream input = LanguageBundle.class.getClassLoader().getResourceAsStream(properties.toString())) {
             if (input == null) {
-                return LanguageBundle.getResource("ERROR_UNABLE_TO_LOAD_LANGUAGE_FILE");
+                return LanguageBundle.getResource("Not possible to load language properties file");
             }
 
             Properties prop = new Properties();
@@ -33,9 +32,8 @@ public class LanguageBundle {
             value = prop.getProperty(message);
 
         } catch (IOException ex) {
+            logger.error("Can't load config file");
             ex.printStackTrace();
-            logger.error("{}", ex);
-//            throw new FileOperationException(LanguageBundle.getResource("ERROR_UNABLE_TO_READ_LANGUAGE_FILE"));
         }
 
         return value != null ? value : "";
