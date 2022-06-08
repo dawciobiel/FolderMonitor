@@ -1,9 +1,7 @@
 /** todo edit it and modify
- * This module is about impact of the final keyword on performance
+ * This module is ...
  * <p>
- * This module explores  if there are any performance benefits from
- * using the final keyword in our code. This module examines the performance
- * implications of using final on a variable, method, and class level.
+ * This module ... .
  * </p>
  *
  * @since 1.0

@@ -25,7 +25,7 @@ public class FileUtils {
         try {
             return java.nio.file.Files.getFileAttributeView(path, BasicFileAttributeView.class).readAttributes();
         } catch (IOException e) {
-            throw new FileOperationException(LanguageBundle.getResource("CANT_READ_FILE_ATTRIBUTE"));
+            throw new FileOperationException(LanguageBundle.getResource("CANT_READ_FILE_ATTRIBUTES"));
         }
     }
 

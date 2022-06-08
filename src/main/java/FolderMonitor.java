@@ -176,17 +176,20 @@ public class FolderMonitor {
         return destination;
     }
 
+    /**
+     * Proceed collection of holders.
+     * Add result to json (by Gson)
+     *
+     */
     public void proceedHolders() {
-        /* todo
-            thread
-                proceed collection of holders
-                    file operation on first holder from Holders
-                    add to gson
 
-         */
     }
 
 
+    /**
+     * The method creates folders where the application works
+     *
+     */
     public void createFolders() {
         List<String> paths = Arrays.asList(
                 ConfigUtils.readConfigValue("FOLDER_DEV"),
@@ -201,8 +204,7 @@ public class FolderMonitor {
 
                 boolean isFoldersAlreadyExist = file.exists();
                 if (!isFoldersAlreadyExist) {
-                    String errorMessage = LanguageBundle.getResource("ERROR_CANT_CREATE_FOLDER" + file.getName());
-                    logger.error(errorMessage);
+                    logger.error(LanguageBundle.getResource("ERROR_CANT_CREATE_FOLDER"), file.getName());
                     logger.error(LanguageBundle.getResource("APPLICATION_TERMINATED"));
                     System.exit(App.EXIT_STATUS_ERROR__BY_CREATING_FOLDER);
                 } else {
