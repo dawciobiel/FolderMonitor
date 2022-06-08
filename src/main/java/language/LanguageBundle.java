@@ -10,31 +10,35 @@ import java.util.Properties;
 
 public class LanguageBundle {
 
-    static Logger logger = LogManager.getRootLogger();
+    static Logger logger = LogManager.getLogger(LanguageBundle.class);
 
 
-    public static String getResource(String message) {
-        String value = "";
+    public static String getResource(String key) {
+        String value;
 
-        String selectedLanguage = ConfigUtils.readConfigValue("LANGUAGE");
-        StringBuilder properties = new StringBuilder("language_");
-        properties.append(selectedLanguage);
-        properties.append(".properties");
+        String language = ConfigUtils.readConfigValue("LANGUAGE");
+        String propFileName = "bundle_" + language + ".properties";
+        Properties prop = new Properties();
 
-        try (InputStream input = LanguageBundle.class.getClassLoader().getResourceAsStream(properties.toString())) {
-            if (input == null) {
-                return LanguageBundle.getResource("Not possible to load language properties file");
+        try (InputStream inputStream = LanguageBundle.class.getClassLoader().getResourceAsStream(propFileName)) {
+            if (inputStream == null) {
+                /* An input stream for reading the resource;
+                null if:
+                 - the resource could not be found,
+                 - the resource is in a package that is not opened unconditionally,
+                 - or access to the resource is denied by the security manager.
+                 */
+                logger.error("Not possible to load language file: {}", propFileName); // Error message can't be stored in .properties file
+                return "Not possible to load language file: " + propFileName;
             }
 
-            Properties prop = new Properties();
-            prop.load(input);
-
-            value = prop.getProperty(message);
-
+            prop.load(inputStream);
         } catch (IOException ex) {
-            logger.error("Can't load config file");
+            logger.error("Not possible to load language properties file"); // Error message can't be stored in .properties file
             ex.printStackTrace();
         }
+
+        value = prop.getProperty(key);
 
         return value != null ? value : "";
     }

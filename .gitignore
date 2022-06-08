@@ -1,7 +1,5 @@
 target/
 !.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
 
 ### STS ###
 .apt_generated
@@ -36,6 +34,8 @@ build/
 test-file.jar
 test-file.xml
 test-file.tmp
+test-file-parity.jar
+App.class
 
 /build/
 **/build/
@@ -56,3 +56,5 @@ test-file.tmp
 /.gradle/buildOutputCleanup/*
 **.gradle/buildOutputCleanup/*
 **.gradle/buildOutputCleanup/**/
+/src/main/java/Main.java
+/src/main/java/calendar/PrettyDate.java

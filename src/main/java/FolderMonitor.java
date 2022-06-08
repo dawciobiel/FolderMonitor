@@ -1,5 +1,7 @@
+import calendar.CalendarUtils;
 import config.ConfigUtils;
 import files.FileOperationException;
+import files.FileUtils;
 import language.LanguageBundle;
 import lombok.Data;
 import model.AttributesHolder;
@@ -10,26 +12,38 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.FileTime;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.function.Consumer;
 
+import static calendar.CalendarUtils.isDateIsEven;
+
+/**
+ *
+ */
 @Data
 public class FolderMonitor {
 
     private static final String JAR = "jar";
     private static final String XML = "xml";
-    private static final int EXIT_STATUS_SUCCESS = 0;
-    private static final int EXIT_STATUS_ERROR = 1;
-    public Deque<AttributesHolder> holders;
+
+    /*
+    ConcurrentLinkedQueue
+    PriorityBlockingQueue
+    LinkedBlockingQueue
+     */
+    /**
+     * Thread safe queue implementation
+     */
+    public Queue<AttributesHolder> holders = new PriorityBlockingQueue<>();
+
+
     Logger logger = LogManager.getRootLogger();
 
-    public void doFolderMonitoring() { // todo thread
+    public void doFolderMonitoring() {
         try {
             String home = ConfigUtils.readConfigValue("FOLDER_HOME");
-            logger.info("Watching directory: {} for changes", home);
+            logger.info(LanguageBundle.getResource("WATCHING_DIRECTORY_FOR_CHANGES"), home);
 
             // STEP1: Create a watch service
             WatchService watchService = FileSystems.getDefault().newWatchService();
@@ -57,17 +71,21 @@ public class FolderMonitor {
 
                     // STEP7: Perform necessary action with the event
                     if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
-                        logger.info("A new file is created : {}", fileName);
-                        AttributesHolder holder = createHolder(pathEvent.context().getFileSystem());
+                        logger.info(LanguageBundle.getResource("NEW_FILE_IS_CREATED"), fileName);
+                        Path filename = ((WatchEvent<Path>) event).context();
+                        Path fileNameWithSrcFolder = directory.resolve(filename);
+                        Path absolutePathWithFileName = Path.of(filename.toAbsolutePath().getParent() + File.separator + fileNameWithSrcFolder);
+                        AttributesHolder holder = createHolder(absolutePathWithFileName);
+
                         holders.add(holder);
                     }
 
                     if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
-                        logger.info("A file has been deleted: {}", fileName);
+                        logger.info(LanguageBundle.getResource("FILE_HAS_BEEN_DELETED"), fileName);
                     }
 
                     if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
-                        logger.info("A file has been modified: {}", fileName);
+                        logger.info(LanguageBundle.getResource("FILE_HAS_BEEN_MODIFIED"), fileName);
                     }
 
                 }
@@ -80,44 +98,77 @@ public class FolderMonitor {
 
             }
         } catch (IOException | FileOperationException e) {
-            logger.error("{}", e);
+            logger.error(LanguageBundle.getResource("EXCEPTION_MESSAGE"), e.getMessage());
+            e.printStackTrace();
         }
-
-        // todo wait for proceedHolders till finish
-
-        System.exit(EXIT_STATUS_SUCCESS);
     }
 
-    private AttributesHolder createHolder(FileSystem fileSystem) throws FileOperationException {
-        for (FileStore fileStore : fileSystem.getFileStores()) {
-            String attributeFileName = null;
-            String attributeExtension = null;
-            FileTime attributeCreationDate = null;
+    /**
+     * Create {@link model.AttributesHolder} based on full {@link java.nio.file.Path} of the file
+     *
+     * @param pathWithName {@link java.nio.file.Path} to the file
+     * @return {@link model.AttributesHolder} object
+     * @throws {@link files.FileOperationException} FileOperationException
+     */
+    private AttributesHolder createHolder(Path pathWithName) throws FileOperationException {
+        String fileName = pathWithName.getFileName().toString();
+        String fileExt = FileUtils.getExtensionByApacheCommonLib(fileName);
+        FileTime creationDateZULU;
+        FileTime lastAccessDateZULU;
+        FileTime modifiedTimeDateZULU;
+        Date creationDateCEST;
+        Date lastAccessDateCEST;
+        Date modifiedTimeDateCEST;
 
-            try {
-                // Reading file name, extension and creation date
-                //Object attributeFileName = fileStore.getAttribute("name");
-                attributeFileName = fileStore.name();
-                attributeExtension = fileStore.getAttribute("extension").toString();
-                attributeCreationDate = null; // fileStore.getAttribute("creation-date"); // todo Get creation date from the file. It is possible to get absolute path from this file and check it in another way (system)
-                attributeCreationDate = FileTime.fromMillis(0); //todo
-            } catch (IOException e) {
-                logger.error(LanguageBundle.getResource("ERROR_READING_FILE_ATTRIBUTES_NOT_POSSIBLE") + ": {}", fileStore);
-            }
-
-            String attributeSourceFolder = ConfigUtils.readConfigValue("FOLDER_HOME");
-            String attributeDestinationFolder = selectTheCorrectDestinationFolder(attributeExtension.toLowerCase(Locale.getDefault()));
-
-            return new AttributesHolder(attributeFileName, attributeExtension, attributeCreationDate, attributeSourceFolder, attributeDestinationFolder);
+        try {
+            creationDateZULU = FileUtils.getFileDates(pathWithName).creationTime();
+            lastAccessDateZULU = FileUtils.getFileDates(pathWithName).lastAccessTime();
+            modifiedTimeDateZULU = FileUtils.getFileDates(pathWithName).lastModifiedTime();
+        } catch (IOException e) {
+            logger.error(LanguageBundle.getResource("READING_FILE_ATTRIBUTES_NOT_POSSIBLE"), fileName);
+            throw new FileOperationException(e.getMessage());
         }
-        return null;
+
+        creationDateCEST = CalendarUtils.convertDateToUTC(creationDateZULU);
+        lastAccessDateCEST = CalendarUtils.convertDateToUTC(lastAccessDateZULU);
+        modifiedTimeDateCEST = CalendarUtils.convertDateToUTC(modifiedTimeDateZULU);
+        Path destinationFolder = Path.of(
+                selectTheCorrectDestinationFolder(
+                        fileExt.toLowerCase(Locale.getDefault()), isDateIsEven(creationDateCEST))
+        );
+
+        AttributesHolder attributesHolder = new AttributesHolder(
+                fileName,
+                fileExt,
+                creationDateCEST,
+                lastAccessDateCEST,
+                modifiedTimeDateCEST,
+                pathWithName,
+                destinationFolder);
+
+        logger.debug(LanguageBundle.getResource("FILE_ATTRIBUTES"), attributesHolder);
+
+        return attributesHolder;
     }
 
-    private String selectTheCorrectDestinationFolder(String attributeExtension) {
+    /**
+     * Based of config file this method will return proper destination folder based on file extension and creation date file parity
+     *
+     * @param fileExtension as {@link java.lang.String} object
+     * @return Name of destination folder as {@link java.lang.String} object
+     */
+    private String selectTheCorrectDestinationFolder(String fileExtension, boolean parity) {
         String destination;
 
-        switch (attributeExtension) {
-            case JAR -> destination = ConfigUtils.readConfigValue("FOLDER_DEV");
+        switch (fileExtension) {
+            case JAR -> {
+                if (parity) {
+                    destination = ConfigUtils.readConfigValue("FOLDER_DEV");
+                } else {
+                    destination = ConfigUtils.readConfigValue("FOLDER_TEST");
+                }
+
+            }
             case XML -> destination = ConfigUtils.readConfigValue("FOLDER_TEST");
             default -> destination = ConfigUtils.readConfigValue("FOLDER_HOME");
         }
@@ -152,13 +203,13 @@ public class FolderMonitor {
                 if (!isFoldersAlreadyExist) {
                     String errorMessage = LanguageBundle.getResource("ERROR_CANT_CREATE_FOLDER" + file.getName());
                     logger.error(errorMessage);
-                    logger.error("Application terminated");
-                    System.exit(1);
+                    logger.error(LanguageBundle.getResource("APPLICATION_TERMINATED"));
+                    System.exit(App.EXIT_STATUS_ERROR__BY_CREATING_FOLDER);
                 } else {
-                    logger.debug("Folder {} exist", file.getName());
+                    logger.debug(LanguageBundle.getResource("FOLDER_ALREADY_EXIST"), file.getName());
                 }
             } else {
-                logger.debug("Folders created");
+                logger.debug(LanguageBundle.getResource("FOLDERS_CREATED"));
             }
         };
         paths.forEach(consumer);

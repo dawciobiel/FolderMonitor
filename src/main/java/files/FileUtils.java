@@ -4,6 +4,7 @@ import language.LanguageBundle;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributeView;
@@ -15,8 +16,8 @@ public class FileUtils {
     /**
      * Returns a file attribute view of a given type
      *
-     * @param uri Path to the file
-     * @return File attributes
+     * @param uri {@link java.nio.file.Path} to the file
+     * @return Attributes of the file as BasicFileAttributes {@link java.nio.file.attribute.BasicFileAttributes}
      */
     public static BasicFileAttributes getFileAttr(Path uri) throws FileOperationException {
         Path path = Paths.get(String.valueOf(uri));
@@ -24,7 +25,7 @@ public class FileUtils {
         try {
             return java.nio.file.Files.getFileAttributeView(path, BasicFileAttributeView.class).readAttributes();
         } catch (IOException e) {
-            throw new FileOperationException(LanguageBundle.getResource("ERROR_CANT_READ_FILE_ATTRIBUTE"));
+            throw new FileOperationException(LanguageBundle.getResource("CANT_READ_FILE_ATTRIBUTE"));
         }
     }
 
@@ -37,10 +38,10 @@ public class FileUtils {
      * No extension – this method will return an empty String<br />
      * Only extension – this method will return the String after the dot, e.g. “gitignore”
      *
-     * @param filename File name
-     * @return  Extension of the file
+     * @param filename File name as {@link java.lang.String} object
+     * @return Extension of the file
      */
-    public Optional<String> getExtensionByStringHandling(String filename) {
+    public static Optional<String> getExtensionByStringHandling(String filename) {
         return Optional.ofNullable(filename).filter(f -> f.contains(".")).map(f -> f.substring(filename.lastIndexOf(".") + 1));
     }
 
@@ -50,13 +51,12 @@ public class FileUtils {
      * No extension – this method will return an empty string.<br />
      * Only extension – this method will return the String after the dot, e.g. “gitignore”
      *
-     * @param fileName  File name
-     * @return   Extension of the file
+     * @param fileName File name as {@link java.lang.String} object
+     * @return Extension of the file
      */
-    public String getExtensionByApacheCommonLib(String fileName) {
+    public static String getExtensionByApacheCommonLib(String fileName) {
         return FilenameUtils.getExtension(fileName);
     }
-
 
     /**
      * Special Cases:
@@ -64,12 +64,22 @@ public class FileUtils {
      * No extension – this method will return an empty String<br />
      * Only extension – this method will return the String after the dot, e.g. “gitignore”
      *
-     * @param filename
-     * @return  Extension of the file
+     * @param filename File name as {@link java.lang.String} object
+     * @return Extension of the file
      */
     public static String getExtensionByGuava(String filename) {
         return com.google.common.io.Files.getFileExtension(filename);
     }
 
+    /**
+     * Return attributes of the file
+     *
+     * @param path {@link java.nio.file.Path} to the file
+     * @return Attributes of the file as BasicFileAttributes {@link java.nio.file.attribute.BasicFileAttributes}
+     * @throws IOException
+     */
+    public static BasicFileAttributes getFileDates(Path path) throws IOException {
+        return Files.readAttributes(path, BasicFileAttributes.class);
+    }
 
 }

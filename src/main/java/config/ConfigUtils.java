@@ -1,6 +1,5 @@
 package config;
 
-import files.FileOperationException;
 import language.LanguageBundle;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,22 +17,28 @@ public class ConfigUtils {
         return ConfigUtils.getResource(param);
     }
 
-    public static String getResource(String message) {
+    public static String getResource(String key) {
         String value;
         Properties prop = new Properties();
 
-        try (InputStream input = LanguageBundle.class.getClassLoader().getResourceAsStream("config.properties")) {
-            if (input == null) {
-                return LanguageBundle.getResource("ERROR_UNABLE_TO_LOAD_CONFIG_FILE");
+        try (InputStream inputStream = LanguageBundle.class.getClassLoader().getResourceAsStream("config.properties")) {
+            if (inputStream == null) {
+                /* An input stream for reading the resource;
+                null if:
+                 - the resource could not be found,
+                 - the resource is in a package that is not opened unconditionally,
+                 - or access to the resource is denied by the security manager.
+                 */
+                return LanguageBundle.getResource("CANT_LOAD_CONFIG_FILE");
             }
 
-            prop.load(input);
-        } catch (IOException ex) {
-            logger.error("Can't load config file");
+            prop.load(inputStream);
+        } catch (IOException ex) { //  if an error occurred when reading from the input stream.
+            logger.error("Can't load from config file"); // Error message can't be stored in .properties file
             ex.printStackTrace();
         }
 
-        value = prop.getProperty(message);
+        value = prop.getProperty(key);
 
         return value != null ? value : "";
     }

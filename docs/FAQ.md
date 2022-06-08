@@ -20,3 +20,14 @@
     Logger: It is used to log the messages.
     Appender: It is used to publish the logging information to the destination like the file, database, console etc.
     Layout: It is used to format logging information in different styles.
+
+## Purposes of package-info
+
+The package-info.java file currently serves two purposes:
+
+    A place for package-level documentation
+    Home for package-level annotations
+
+Other than the aforementioned, the use-cases can be extended as required. In the future, if it's required to add any package-level feature, this file will be a perfect place.
+
+Link: https://www.baeldung.com/java-package-info
