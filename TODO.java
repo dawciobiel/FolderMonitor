@@ -1,10 +1,5 @@
 public class TODO {
 
-/*
-
-// todo: Create feature for moving files
-
-
 // fixme: When a new file appears, FileMonitor will react repeatedly:
 //- a new file has been detected
 //- the file has been modified
