@@ -1,11 +1,8 @@
 package calendar;
 
 import java.nio.file.attribute.FileTime;
-import java.text.DateFormat;
-import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Locale;
 
 public class CalendarUtils {
 
@@ -25,7 +22,7 @@ public class CalendarUtils {
      * @param dateAndTime {@link java.util.Date} Date and time
      * @return Return <strong>true</strong> if date is even
      */
-    public static boolean isDateIsEven(Date dateAndTime) { // todo Create documentation for this method
+    public static boolean isDateIsEven(Date dateAndTime) {
         return dateAndTime.getTime() % 2 == 0;
     }
 

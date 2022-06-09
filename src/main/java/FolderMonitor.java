@@ -7,6 +7,8 @@ import lombok.Data;
 import model.AttributesHolder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,6 +26,8 @@ import static calendar.CalendarUtils.isDateIsEven;
 @Data
 public class FolderMonitor {
 
+    private static final Marker APP_MARKER = MarkerManager.getMarker("application");
+
     private static final String JAR = "jar";
     private static final String XML = "xml";
 
@@ -37,8 +41,7 @@ public class FolderMonitor {
      */
     public Queue<AttributesHolder> holders = new PriorityBlockingQueue<>();
 
-
-    Logger logger = LogManager.getRootLogger();
+    private static final Logger logger = LogManager.getLogger(FolderMonitor.class);
 
     public void doFolderMonitoring() {
         try {
@@ -179,7 +182,6 @@ public class FolderMonitor {
     /**
      * Proceed collection of holders.
      * Add result to json (by Gson)
-     *
      */
     public void proceedHolders() {
 
@@ -188,7 +190,6 @@ public class FolderMonitor {
 
     /**
      * The method creates folders where the application works
-     *
      */
     public void createFolders() {
         List<String> paths = Arrays.asList(
@@ -205,7 +206,7 @@ public class FolderMonitor {
                 boolean isFoldersAlreadyExist = file.exists();
                 if (!isFoldersAlreadyExist) {
                     logger.error(LanguageBundle.getResource("ERROR_CANT_CREATE_FOLDER"), file.getName());
-                    logger.error(LanguageBundle.getResource("APPLICATION_TERMINATED"));
+                    logger.error(APP_MARKER, LanguageBundle.getResource("APPLICATION_TERMINATED"));
                     System.exit(App.EXIT_STATUS_ERROR__BY_CREATING_FOLDER);
                 } else {
                     logger.debug(LanguageBundle.getResource("FOLDER_ALREADY_EXIST"), file.getName());

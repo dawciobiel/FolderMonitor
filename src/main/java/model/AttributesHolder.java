@@ -2,6 +2,8 @@ package model;
 
 import files.FileUtils;
 import lombok.Data;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -89,7 +91,6 @@ public class AttributesHolder implements Comparable {
         sb.append("last access date: ").append(fileLastAccessDate).append("\n");
         sb.append("source folder: ").append(sourceFolder).append("\n");
         sb.append("destination folder: ").append(destinationFolder);
-//        sb.append("\n");
 
         return sb.toString();
 
@@ -101,27 +102,16 @@ public class AttributesHolder implements Comparable {
 
         if (
                 (this.fileName.equals(c.getFileName())) &&
-                (this.fileExt.equals(c.getFileExt())) &&
-                (this.fileCreationDate.equals(c.getFileCreationDate())) &&
-                (this.fileLastAccessDate.equals(c.getFileLastAccessDate())) &&
-                (this.fileModifiedTimeDate.equals(c.getFileModifiedTimeDate())) &&
+                        (this.fileExt.equals(c.getFileExt())) &&
+                        (this.fileCreationDate.equals(c.getFileCreationDate())) &&
+                        (this.fileLastAccessDate.equals(c.getFileLastAccessDate())) &&
+                        (this.fileModifiedTimeDate.equals(c.getFileModifiedTimeDate())) &&
 
-                (this.sourceFolder.equals(c.getSourceFolder())) &&
-                (this.destinationFolder.equals(c.getDestinationFolder()))
-                // && (this.parityOfDate == c.get)
-
+                        (this.sourceFolder.equals(c.getSourceFolder())) &&
+                        (this.destinationFolder.equals(c.getDestinationFolder()) &&
+                        (this.parityOfDate == c.isParityOfDate()))
         ) {
             return 0;
-                        /*
-                            private String fileName;
-                            private String fileExt;
-                            private Date fileCreationDate;
-                            private Date fileLastAccessDate;
-                            private Date fileModifiedTimeDate;
-                            private Path sourceFolder;
-                            private Path destinationFolder;
-                            private boolean parityOfDate;
-                         */
         } else {
             return -1;
         }

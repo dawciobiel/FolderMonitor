@@ -4,14 +4,13 @@ import language.LanguageBundle;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
 public class ConfigUtils {
 
-    static Logger logger = LogManager.getRootLogger();
+    private static final Logger logger = LogManager.getLogger(ConfigUtils.class);
 
     public static String readConfigValue(String param) {
         return ConfigUtils.getResource(param);
