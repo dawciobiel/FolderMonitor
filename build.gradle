@@ -24,6 +24,10 @@ dependencies {
     // Apache Common IO
     implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
 
+    // Apache Common
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
+
     // Use Guava in your implementation only:
     implementation("com.google.guava:guava:31.1-jre")
 

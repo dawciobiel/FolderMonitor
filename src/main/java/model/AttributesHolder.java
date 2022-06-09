@@ -1,9 +1,8 @@
 package model;
 
+import config.ConfigUtils;
 import files.FileUtils;
 import lombok.Data;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -18,64 +17,94 @@ import static calendar.CalendarUtils.isDateIsEven;
 public class AttributesHolder implements Comparable {
 
     /**
-     *
+     * File name
      */
-    private String fileName;
+    private String name;
 
     /**
-     *
+     * File extension
      */
-    private String fileExt;
+    private String extension;
 
     /**
-     *
+     * File creation date and time
      */
-    private Date fileCreationDate;
+    private Date creationDate;
 
     /**
-     *
+     * File last access date and time
      */
-    private Date fileLastAccessDate;
+    private Date lastAccessDate;
 
     /**
-     *
+     * File modified date and time
      */
-    private Date fileModifiedTimeDate;
+    private Date modifiedTimeDate;
 
     /**
-     *
+     * Folder where this file exist
      */
-    private Path sourceFolder;
+    private Path source;
 
     /**
-     *
+     * Folder where this file should be moved
      */
-    private Path destinationFolder;
+    private Path destination;
 
     /**
-     *
+     * Parity of date and time. Date and time of creation file
      */
     private boolean parityOfDate;
 
 
-    public AttributesHolder(String fileName,
-                            String fileExt,
-                            Date fileCreationDate,
-                            Date fileLastAccessDate,
-                            Date fileModifiedTimeDate,
+    /**
+     * Create {@link AttributesHolder} object
+     *
+     * @param name
+     * @param extension
+     * @param creationDate
+     * @param lastAccessDate
+     * @param modifiedTimeDate
+     * @param sourceFolderWithFileName
+     * @param destinationFolderWithFileName
+     */
+    public AttributesHolder(String name, String extension,
+                            Date creationDate, Date lastAccessDate, Date modifiedTimeDate,
+                            Path sourceFolderWithFileName,
+                            Path destinationFolderWithFileName) {
+        this.name = name;
+        this.extension = extension;
 
-                            Path sourceFolder,
-                            Path destinationFolder) {
-        this.fileName = fileName;
-        this.fileExt = fileExt;
-        this.fileCreationDate = fileCreationDate;
-        this.fileLastAccessDate = fileLastAccessDate;
-        this.fileModifiedTimeDate = fileModifiedTimeDate;
+        this.creationDate = creationDate;
+        this.lastAccessDate = lastAccessDate;
+        this.modifiedTimeDate = modifiedTimeDate;
 
-        this.sourceFolder = sourceFolder;
-        this.destinationFolder = destinationFolder;
-        this.parityOfDate = isDateIsEven(fileCreationDate);
+        this.parityOfDate = isDateIsEven(creationDate);
+
+        this.source = sourceFolderWithFileName;
+        this.destination = destinationFolderWithFileName;
     }
+
+    /**
+     * Create {@link AttributesHolder} object. Field {@link AttributesHolder#source} will
+     * be set from config value <I>"FOLDER_HOME"</I>.
+     *
+     * @param name
+     * @param extension
+     * @param creationDate
+     * @param lastAccessDate
+     * @param modifiedTimeDate
+     * @param destinationFolderWithFileName
+     */
+    public AttributesHolder(String name, String extension,
+                            Date creationDate, Date lastAccessDate, Date modifiedTimeDate,
+                            Path destinationFolderWithFileName) {
+
+        this(name, extension,
+                creationDate, lastAccessDate, modifiedTimeDate,
+                Path.of(ConfigUtils.getResource("FOLDER_HOME")), destinationFolderWithFileName);
+    }
+
 
     private String getExtensionByGuava(File file) {
         return FileUtils.getExtensionByGuava(file.getName());
@@ -83,14 +112,14 @@ public class AttributesHolder implements Comparable {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("file name: ").append(fileName).append("\n");
-        sb.append("extension: ").append(fileExt).append("\n");
+        sb.append("file name: ").append(name).append("\n");
+        sb.append("extension: ").append(extension).append("\n");
         sb.append("parity: ").append(parityOfDate).append("\n");
-        sb.append("creation date: ").append(fileCreationDate).append("\n");
-        sb.append("modified time date: ").append(fileModifiedTimeDate).append("\n");
-        sb.append("last access date: ").append(fileLastAccessDate).append("\n");
-        sb.append("source folder: ").append(sourceFolder).append("\n");
-        sb.append("destination folder: ").append(destinationFolder);
+        sb.append("creation date: ").append(creationDate).append("\n");
+        sb.append("modified time date: ").append(modifiedTimeDate).append("\n");
+        sb.append("last access date: ").append(lastAccessDate).append("\n");
+        sb.append("source folder: ").append(source).append("\n");
+        sb.append("destination: ").append(destination);
 
         return sb.toString();
 
@@ -101,15 +130,15 @@ public class AttributesHolder implements Comparable {
         AttributesHolder c = (AttributesHolder) o;
 
         if (
-                (this.fileName.equals(c.getFileName())) &&
-                        (this.fileExt.equals(c.getFileExt())) &&
-                        (this.fileCreationDate.equals(c.getFileCreationDate())) &&
-                        (this.fileLastAccessDate.equals(c.getFileLastAccessDate())) &&
-                        (this.fileModifiedTimeDate.equals(c.getFileModifiedTimeDate())) &&
+                (this.name.equals(c.getName())) &&
+                        (this.extension.equals(c.getExtension())) &&
+                        (this.creationDate.equals(c.getCreationDate())) &&
+                        (this.lastAccessDate.equals(c.getLastAccessDate())) &&
+                        (this.modifiedTimeDate.equals(c.getModifiedTimeDate())) &&
 
-                        (this.sourceFolder.equals(c.getSourceFolder())) &&
-                        (this.destinationFolder.equals(c.getDestinationFolder()) &&
-                        (this.parityOfDate == c.isParityOfDate()))
+                        (this.source.equals(c.getSource())) &&
+                        (this.destination.equals(c.getDestination()) &&
+                                (this.parityOfDate == c.isParityOfDate()))
         ) {
             return 0;
         } else {

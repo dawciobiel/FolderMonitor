@@ -1,3 +1,5 @@
+import org.apache.commons.lang3.StringUtils;
+
 import calendar.CalendarUtils;
 import config.ConfigUtils;
 import files.FileOperationException;
@@ -51,11 +53,11 @@ public class FolderMonitor {
             // STEP1: Create a watch service
             WatchService watchService = FileSystems.getDefault().newWatchService();
 
-            // STEP2: Get the path of the directory which you want to monitor.
-            Path directory = Path.of(home);
+            // STEP2: Get the path of the monitoringFolder which you want to monitor.
+            Path monitoringFolder = Path.of(home);
 
-            // STEP3: Register the directory with the watch service
-            WatchKey watchKey = directory.register(watchService,
+            // STEP3: Register the monitoringFolder with the watch service
+            WatchKey watchKey = monitoringFolder.register(watchService,
                     StandardWatchEventKinds.ENTRY_CREATE,
                     StandardWatchEventKinds.ENTRY_MODIFY,
                     StandardWatchEventKinds.ENTRY_DELETE);
@@ -76,20 +78,24 @@ public class FolderMonitor {
                     if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
                         logger.info(LanguageBundle.getResource("NEW_FILE_IS_CREATED"), fileName);
                         Path filename = ((WatchEvent<Path>) event).context();
-                        Path fileNameWithSrcFolder = directory.resolve(filename);
-                        Path absolutePathWithFileName = Path.of(filename.toAbsolutePath().getParent() + File.separator + fileNameWithSrcFolder);
-                        AttributesHolder holder = createHolder(absolutePathWithFileName);
+                        AttributesHolder holder = createHolder(fileName.getFileName());
+                        holder.setSource(Path.of(ConfigUtils.getResource("FOLDER_HOME") + File.separator + fileName.getFileName().toString()));
 
                         holders.add(holder);
+
+                        // todo Move it to proceedHolders() method
+                        if (StringUtils.notEqual(holder.getSource(), holder.getDestination())) {
+                            FileUtils.moveFile(holder);
+                        }
                     }
 
-                    if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
-                        logger.info(LanguageBundle.getResource("FILE_HAS_BEEN_DELETED"), fileName);
-                    }
+//                    if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
+//                        logger.info(LanguageBundle.getResource("FILE_HAS_BEEN_DELETED"), fileName);
+//                    }
 
-                    if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
-                        logger.info(LanguageBundle.getResource("FILE_HAS_BEEN_MODIFIED"), fileName);
-                    }
+//                    if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
+//                        logger.info(LanguageBundle.getResource("FILE_HAS_BEEN_MODIFIED"), fileName);
+//                    }
 
                 }
 
@@ -107,46 +113,45 @@ public class FolderMonitor {
     }
 
     /**
-     * Create {@link model.AttributesHolder} based on full {@link java.nio.file.Path} of the file
+     * Create {@link model.AttributesHolder} based on {@link java.nio.file.Path} file name and creation date time
      *
-     * @param pathWithName {@link java.nio.file.Path} to the file
+     * @param fileName {@link java.nio.file.Path} File name
      * @return {@link model.AttributesHolder} object
      * @throws {@link files.FileOperationException} FileOperationException
      */
-    private AttributesHolder createHolder(Path pathWithName) throws FileOperationException {
-        String fileName = pathWithName.getFileName().toString();
-        String fileExt = FileUtils.getExtensionByApacheCommonLib(fileName);
+    private AttributesHolder createHolder(Path fileName) throws FileOperationException {
+        String fileExt = FileUtils.getExtensionByApacheCommonLib(fileName.toString());
         FileTime creationDateZULU;
         FileTime lastAccessDateZULU;
         FileTime modifiedTimeDateZULU;
-        Date creationDateCEST;
-        Date lastAccessDateCEST;
-        Date modifiedTimeDateCEST;
 
         try {
-            creationDateZULU = FileUtils.getFileDates(pathWithName).creationTime();
-            lastAccessDateZULU = FileUtils.getFileDates(pathWithName).lastAccessTime();
-            modifiedTimeDateZULU = FileUtils.getFileDates(pathWithName).lastModifiedTime();
+            creationDateZULU = FileUtils.getFileDates(fileName).creationTime();
+            lastAccessDateZULU = FileUtils.getFileDates(fileName).lastAccessTime();
+            modifiedTimeDateZULU = FileUtils.getFileDates(fileName).lastModifiedTime();
         } catch (IOException e) {
             logger.error(LanguageBundle.getResource("READING_FILE_ATTRIBUTES_NOT_POSSIBLE"), fileName);
             throw new FileOperationException(e.getMessage());
         }
 
-        creationDateCEST = CalendarUtils.convertDateToUTC(creationDateZULU);
-        lastAccessDateCEST = CalendarUtils.convertDateToUTC(lastAccessDateZULU);
-        modifiedTimeDateCEST = CalendarUtils.convertDateToUTC(modifiedTimeDateZULU);
-        Path destinationFolder = Path.of(
-                selectTheCorrectDestinationFolder(
-                        fileExt.toLowerCase(Locale.getDefault()), isDateIsEven(creationDateCEST))
+        Date creationDateCEST = CalendarUtils.convertDateToUTC(creationDateZULU);
+        Date lastAccessDateCEST = CalendarUtils.convertDateToUTC(lastAccessDateZULU);
+        Date modifiedTimeDateCEST = CalendarUtils.convertDateToUTC(modifiedTimeDateZULU);
+
+        Path sourceFolder = Path.of(ConfigUtils.getResource("FOLDER_HOME") + File.separator + fileName);
+        // Selecting what destination folder it's going to be based on creation date
+        Path destinationFolder = Path.of(selectTheCorrectDestinationFolder(
+                fileExt.toLowerCase(Locale.getDefault()), isDateIsEven(creationDateCEST))
         );
+        destinationFolder = Path.of(destinationFolder + File.separator + fileName);
 
         AttributesHolder attributesHolder = new AttributesHolder(
-                fileName,
+                fileName.toString(),
                 fileExt,
                 creationDateCEST,
                 lastAccessDateCEST,
                 modifiedTimeDateCEST,
-                pathWithName,
+                sourceFolder,
                 destinationFolder);
 
         logger.debug(LanguageBundle.getResource("FILE_ATTRIBUTES"), attributesHolder);
@@ -175,7 +180,12 @@ public class FolderMonitor {
             case XML -> destination = ConfigUtils.readConfigValue("FOLDER_TEST");
             default -> destination = ConfigUtils.readConfigValue("FOLDER_HOME");
         }
+        /* todo W jaki sposób określić pełną ścieżkę do folderów?
+        - na podstawie folderu startowego aplikacji?
+        - wymusić podawanie pełnej ścieżki?
+        - wprowadzić dodatkową zmienną która jest zdefiniowana w configu jako ścieżka początkowa dla każdego z folderów?
 
+        *   */
         return destination;
     }
 
@@ -212,7 +222,7 @@ public class FolderMonitor {
                     logger.debug(LanguageBundle.getResource("FOLDER_ALREADY_EXIST"), file.getName());
                 }
             } else {
-                logger.debug(LanguageBundle.getResource("FOLDERS_CREATED"));
+                logger.debug(LanguageBundle.getResource("FOLDER_CREATED"), file.getName());
             }
         };
         paths.forEach(consumer);

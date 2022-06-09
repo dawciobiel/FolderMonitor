@@ -1,18 +1,8 @@
 public class TODO {
 
 /*
-todo: Logger config
-      Maybe .xml config is needed or proper .properties config
-      Do it by tutorial: https://mkyong.com/logging/apache-log4j-2-tutorials/
-*/
 
-// todo: Create feature for output (count.txt file)
-
-
-// todo: Check and refactor if needed all language bundles
-
-
-// todo: Translate language bundles en -> pl
+// todo: Create feature for moving files
 
 
 // fixme: When a new file appears, FileMonitor will react repeatedly:
