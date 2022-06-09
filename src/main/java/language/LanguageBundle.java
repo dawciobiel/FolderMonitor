@@ -10,7 +10,7 @@ import java.util.Properties;
 
 public class LanguageBundle {
 
-    static Logger logger = LogManager.getLogger(LanguageBundle.class);
+    private static final Logger logger = LogManager.getLogger(LanguageBundle.class);
 
 
     public static String getResource(String key) {
