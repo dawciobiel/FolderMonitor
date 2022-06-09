@@ -1,17 +1,23 @@
 package files;
 
 import language.LanguageBundle;
+import model.AttributesHolder;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 
 public class FileUtils {
+
+    private static final Logger logger = LogManager.getLogger(FileUtils.class);
 
     /**
      * Returns a file attribute view of a given type
@@ -80,6 +86,29 @@ public class FileUtils {
      */
     public static BasicFileAttributes getFileDates(Path path) throws IOException {
         return Files.readAttributes(path, BasicFileAttributes.class);
+    }
+
+    /**
+     * The method changes the location of the file from the source folder to the destination folder
+     *
+     * @param attributesHolder   {@link AttributesHolder}
+     * @return
+     */
+    public static boolean moveFile(AttributesHolder attributesHolder) {
+        Path src = attributesHolder.getSource();
+        Path dest = attributesHolder.getDestination();
+
+        boolean fileMoved = true;
+        try {
+            Files.move(src, dest, StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception e) {
+            fileMoved = false;
+            logger.error(LanguageBundle.getResource("CANT_MOVE_FILE"), src.getFileName());
+            e.printStackTrace();
+        }
+        logger.info(LanguageBundle.getResource("FILE_MOVED"), src.getFileName());
+
+        return fileMoved;
     }
 
 }

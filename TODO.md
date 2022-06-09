@@ -1,6 +1,6 @@
 # TODO list
-- Logger
-- Gson - json as output (count.txt file)
+- <s>Logger</s>
+- <s>Gson - json as output (count.txt file)</s>
 - Threads
 - Tests
 - Docs
