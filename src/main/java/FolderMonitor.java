@@ -84,7 +84,7 @@ public class FolderMonitor {
                         holders.add(holder);
 
                         // todo Move it to proceedHolders() method
-                        if (StringUtils.notEqual(holder.getSource(), holder.getDestination())) {
+                        if (!StringUtils.equals(holder.getSource().toString(), holder.getDestination().toString())) {
                             FileUtils.moveFile(holder);
                         }
                     }
