@@ -11,12 +11,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 /**
- *  The class enables data write operations to a JSON file using the Gson library
- *
+ * The class enables data write operations to a JSON file using the Gson library
  */
-public class GsonUtils {
+final public class GsonUtils {
 
     private static final Logger logger = LogManager.getLogger(GsonUtils.class);
+
+    private GsonUtils() {
+    }
 
     /**
      * Create and/or write data to json file

@@ -8,9 +8,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class LanguageBundle {
+final public class LanguageBundle {
 
     private static final Logger logger = LogManager.getLogger(LanguageBundle.class);
+
+    private LanguageBundle() {
+    }
 
 
     public static String getResource(String key) {

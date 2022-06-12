@@ -1,3 +1,4 @@
+import model.AttributesHolderAction;
 import org.apache.commons.lang3.StringUtils;
 
 import calendar.CalendarUtils;
@@ -28,6 +29,8 @@ import static calendar.CalendarUtils.isDateIsEven;
 @Data
 public class FolderMonitor {
 
+    private static final Logger logger = LogManager.getLogger(FolderMonitor.class);
+
     private static final Marker APP_MARKER = MarkerManager.getMarker("application");
 
     private static final String JAR = "jar";
@@ -37,13 +40,18 @@ public class FolderMonitor {
     ConcurrentLinkedQueue
     PriorityBlockingQueue
     LinkedBlockingQueue
+
+    No need to use volatile
      */
     /**
-     * Thread safe queue implementation
+     * PriorityBlockingQueue - Thread safe queue implementation
+     *
+     * <p>PriorityBlockingQueue:</p>
+     * <br />
+     * <p>This is the unbounded blocking queue with priority. Every time you leave the queue, you will return the elements with the highest or lowest priority (here the rules can be made by yourself). The internal is implemented by using the balanced binary tree, and the traversal does not guarantee the order;</p>
      */
     public Queue<AttributesHolder> holders = new PriorityBlockingQueue<>();
 
-    private static final Logger logger = LogManager.getLogger(FolderMonitor.class);
 
     public void doFolderMonitoring() {
         try {
@@ -65,38 +73,7 @@ public class FolderMonitor {
             // STEP4: Poll for events
             while (true) {
                 for (WatchEvent<?> event : watchKey.pollEvents()) {
-
-                    // STEP5: Get file name from even context
-                    WatchEvent<Path> pathEvent = (WatchEvent<Path>) event;
-
-                    Path fileName = pathEvent.context();
-
-                    // STEP6: Check type of event.
-                    WatchEvent.Kind<?> kind = event.kind();
-
-                    // STEP7: Perform necessary action with the event
-                    if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
-                        logger.info(LanguageBundle.getResource("NEW_FILE_IS_CREATED"), fileName);
-                        Path filename = ((WatchEvent<Path>) event).context();
-                        AttributesHolder holder = createHolder(fileName.getFileName());
-                        holder.setSource(Path.of(ConfigUtils.getResource("FOLDER_HOME") + File.separator + fileName.getFileName().toString()));
-
-                        holders.add(holder);
-
-                        // todo Move it to proceedHolders() method
-                        if (!StringUtils.equals(holder.getSource().toString(), holder.getDestination().toString())) {
-                            FileUtils.moveFile(holder);
-                        }
-                    }
-
-//                    if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
-//                        logger.info(LanguageBundle.getResource("FILE_HAS_BEEN_DELETED"), fileName);
-//                    }
-
-//                    if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
-//                        logger.info(LanguageBundle.getResource("FILE_HAS_BEEN_MODIFIED"), fileName);
-//                    }
-
+                    watchingFolderEvent(event);
                 }
 
                 // STEP8: Reset the watch key everytime for continuing to use it for further event polling
@@ -112,12 +89,37 @@ public class FolderMonitor {
         }
     }
 
+    private void watchingFolderEvent(WatchEvent<?> event) throws FileOperationException {
+        // STEP5: Get file name from even context
+        WatchEvent<Path> pathEvent = (WatchEvent<Path>) event;
+
+        Path fileName = pathEvent.context();
+
+        // STEP6: Check type of event.
+        WatchEvent.Kind<?> kind = event.kind();
+
+        // STEP7: Perform necessary action with the event
+        if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
+            logger.info(LanguageBundle.getResource("NEW_FILE_IS_CREATED"), fileName);
+//            Path filename = ((WatchEvent<Path>) event).context();
+            holders.add(createHolder(fileName.getFileName()));
+        }
+
+        if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
+//            logger.info(LanguageBundle.getResource("FILE_HAS_BEEN_DELETED"), fileName);
+        }
+
+        if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
+//            logger.info(LanguageBundle.getResource("FILE_HAS_BEEN_MODIFIED"), fileName);
+        }
+    }
+
     /**
      * Create {@link model.AttributesHolder} based on {@link java.nio.file.Path} file name and creation date time
      *
      * @param fileName {@link java.nio.file.Path} File name
      * @return {@link model.AttributesHolder} object
-     * @throws {@link files.FileOperationException} FileOperationException
+     * @throws {@link files.FileOperationException}
      */
     private AttributesHolder createHolder(Path fileName) throws FileOperationException {
         String fileExt = FileUtils.getExtensionByApacheCommonLib(fileName.toString());
@@ -140,12 +142,15 @@ public class FolderMonitor {
 
         Path sourceFolder = Path.of(ConfigUtils.getResource("FOLDER_HOME") + File.separator + fileName);
         // Selecting what destination folder it's going to be based on creation date
-        Path destinationFolder = Path.of(selectTheCorrectDestinationFolder(
-                fileExt.toLowerCase(Locale.getDefault()), isDateIsEven(creationDateCEST))
+        Path destinationFolder = Path.of(
+                selectTheCorrectDestinationFolder(
+                        fileExt.toLowerCase(Locale.getDefault()),
+                        isDateIsEven(creationDateCEST))
+                        + File.separator + fileName
         );
-        destinationFolder = Path.of(destinationFolder + File.separator + fileName);
 
         AttributesHolder attributesHolder = new AttributesHolder(
+                AttributesHolderAction.MOVE,
                 fileName.toString(),
                 fileExt,
                 creationDateCEST,
@@ -194,9 +199,15 @@ public class FolderMonitor {
      * Add result to json (by Gson)
      */
     public void proceedHolders() {
-
+        while (true) {
+            AttributesHolder holder = holders.poll();
+            if (holder != null) {
+                if (!StringUtils.equals(holder.getSource().toString(), holder.getDestination().toString())) {
+                    FileUtils.moveFile(holder);
+                }
+            }
+        }
     }
-
 
     /**
      * The method creates folders where the application works

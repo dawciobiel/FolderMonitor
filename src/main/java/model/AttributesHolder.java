@@ -17,6 +17,11 @@ import static calendar.CalendarUtils.isDateIsEven;
 public class AttributesHolder implements Comparable {
 
     /**
+     * Action to be performed on this {@link AttributesHolder}
+     */
+    private AttributesHolderAction action;
+
+    /**
      * File name
      */
     private String name;
@@ -60,18 +65,22 @@ public class AttributesHolder implements Comparable {
     /**
      * Create {@link AttributesHolder} object
      *
-     * @param name
-     * @param extension
-     * @param creationDate
-     * @param lastAccessDate
-     * @param modifiedTimeDate
-     * @param sourceFolderWithFileName
-     * @param destinationFolderWithFileName
+     * @param action                        Action to be performed on this {@link AttributesHolder}
+     * @param name                          Name of the file
+     * @param extension                     Extension of the file
+     * @param creationDate                  Date of file creation
+     * @param lastAccessDate                Date of last access of the file
+     * @param modifiedTimeDate              Date of last modification of the file
+     * @param sourceFolderWithFileName      Path to the source folder of the tile
+     * @param destinationFolderWithFileName Path to the destination where file should be placed
      */
-    public AttributesHolder(String name, String extension,
+    public AttributesHolder(AttributesHolderAction action,
+                            String name, String extension,
                             Date creationDate, Date lastAccessDate, Date modifiedTimeDate,
                             Path sourceFolderWithFileName,
                             Path destinationFolderWithFileName) {
+
+        this.action = action;
         this.name = name;
         this.extension = extension;
 
@@ -89,22 +98,25 @@ public class AttributesHolder implements Comparable {
      * Create {@link AttributesHolder} object. Field {@link AttributesHolder#source} will
      * be set from config value <I>"FOLDER_HOME"</I>.
      *
-     * @param name
-     * @param extension
-     * @param creationDate
-     * @param lastAccessDate
-     * @param modifiedTimeDate
-     * @param destinationFolderWithFileName
+     * @param action                        Action to be performed on this {@link AttributesHolder}
+     * @param name                          Name of the file
+     * @param extension                     Extension of the file
+     * @param creationDate                  Date of file creation
+     * @param lastAccessDate                Date of last access of the file
+     * @param modifiedTimeDate              Date of last modification of the file
+     * @param destinationFolderWithFileName Path to the destination where file should be placed
      */
-    public AttributesHolder(String name, String extension,
-                            Date creationDate, Date lastAccessDate, Date modifiedTimeDate,
-                            Path destinationFolderWithFileName) {
+    public AttributesHolder(
+            AttributesHolderAction action,
+            String name, String extension,
+            Date creationDate, Date lastAccessDate, Date modifiedTimeDate,
+            Path destinationFolderWithFileName) {
 
-        this(name, extension,
+        this(action,
+                name, extension,
                 creationDate, lastAccessDate, modifiedTimeDate,
                 Path.of(ConfigUtils.getResource("FOLDER_HOME")), destinationFolderWithFileName);
     }
-
 
     private String getExtensionByGuava(File file) {
         return FileUtils.getExtensionByGuava(file.getName());
@@ -118,6 +130,7 @@ public class AttributesHolder implements Comparable {
         sb.append("creation date: ").append(creationDate).append("\n");
         sb.append("modified time date: ").append(modifiedTimeDate).append("\n");
         sb.append("last access date: ").append(lastAccessDate).append("\n");
+        sb.append("action to be performed: ").append(action.toString()).append("\n");
         sb.append("source folder: ").append(source).append("\n");
         sb.append("destination: ").append(destination);
 
@@ -125,6 +138,12 @@ public class AttributesHolder implements Comparable {
 
     }
 
+    /**
+     * Compare {@link AttributesHolder} objects based on theirs attributes
+     *
+     * @param o the object to be compared.
+     * @return  Return '0' when objects are equals
+     */
     @Override
     public int compareTo(Object o) {
         AttributesHolder c = (AttributesHolder) o;

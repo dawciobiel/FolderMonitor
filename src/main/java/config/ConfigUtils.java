@@ -8,9 +8,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class ConfigUtils {
+final public class ConfigUtils {
 
     private static final Logger logger = LogManager.getLogger(ConfigUtils.class);
+
+    private ConfigUtils() {
+    }
 
     public static String readConfigValue(String param) {
         return ConfigUtils.getResource(param);
