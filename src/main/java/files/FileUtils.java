@@ -15,9 +15,12 @@ import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 
-public class FileUtils {
+final public class FileUtils {
 
     private static final Logger logger = LogManager.getLogger(FileUtils.class);
+
+    private FileUtils() {
+    }
 
     /**
      * Returns a file attribute view of a given type
@@ -82,7 +85,7 @@ public class FileUtils {
      *
      * @param path {@link java.nio.file.Path} to the file
      * @return Attributes of the file as BasicFileAttributes {@link java.nio.file.attribute.BasicFileAttributes}
-     * @throws IOException
+     * @throws IOException  if an I/O error occurs
      */
     public static BasicFileAttributes getFileDates(Path path) throws IOException {
         return Files.readAttributes(path, BasicFileAttributes.class);
@@ -91,8 +94,8 @@ public class FileUtils {
     /**
      * The method changes the location of the file from the source folder to the destination folder
      *
-     * @param attributesHolder   {@link AttributesHolder}
-     * @return
+     * @param attributesHolder {@link AttributesHolder}
+     * @return  true - if file was moved
      */
     public static boolean moveFile(AttributesHolder attributesHolder) {
         Path src = attributesHolder.getSource();

@@ -9,6 +9,10 @@ import org.apache.logging.log4j.MarkerManager;
  */
 public class App {
 
+    private static final Logger logger = LogManager.getLogger(App.class);
+
+    private static final Marker APP_MARKER = MarkerManager.getMarker("application");
+
     /**
      *
      */
@@ -19,20 +23,21 @@ public class App {
      */
     public static final int EXIT_STATUS_ERROR__BY_CREATING_FOLDER = 1;
 
-    private static final Marker APP_MARKER = MarkerManager.getMarker("application");
-    private static final Logger logger = LogManager.getLogger(App.class);
 
     /**
-     *
-     * @param args  Arguments
+     * @param args Arguments
      */
     public static void main(String[] args) {
-        logger.info(APP_MARKER, LanguageBundle.getResource( "APPLICATION_STARTED"));
+        logger.info(APP_MARKER, LanguageBundle.getResource("APPLICATION_STARTED"));
 
         FolderMonitor fm = new FolderMonitor();
         fm.createFolders();
-        fm.doFolderMonitoring(); // todo threaded it
-        fm.proceedHolders(); // todo threaded it
+
+        var ProceedingHoldersThread = new Thread(fm::proceedHolders);
+        ProceedingHoldersThread.start();
+
+        fm.doFolderMonitoring();
+
         logger.info(APP_MARKER, LanguageBundle.getResource("APPLICATION_FINISHED"));
         System.exit(EXIT_STATUS_SUCCESS);
     }

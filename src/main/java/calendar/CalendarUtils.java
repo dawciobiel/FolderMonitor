@@ -4,7 +4,10 @@ import java.nio.file.attribute.FileTime;
 import java.util.Calendar;
 import java.util.Date;
 
-public class CalendarUtils {
+final public class CalendarUtils {
+
+    private CalendarUtils() {
+    }
 
     /**
      * <!-- Based on the day of the month on a given date --> Returns {@link Boolean#TRUE} if and only if the date is even
